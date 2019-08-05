@@ -1,38 +1,38 @@
-import scrapy
 from scrapy.http.request import Request
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
 
-class MultiSpider(scrapy.Spider):
-    name = 'multiple'
-    def start_requests(self):
+class ExampleSpider(CrawlSpider):
+    name = 'my-crawler'
+    allowed_domains = ["ntc.net.np", "starternepal.com"]
+    start_urls = [l.strip() for l in open('urls.txt').readlines()]
 
-        with open('urls.txt') as f:
-            links = f.readlines()
-            links = list(map(lambda x: x.strip(), links))
-            for link in links:
-                yield Request(link, meta={'start_urls': link}, callback=self.parse)
+    # def start_requests(self):
+    #
+    #     with open('urls.txt') as f:
+    #         links = f.readlines()
+    #         links = list(map(lambda x: x.strip(), links))
+    #         for link in links:
+    #             yield Request(link, meta={'start_urls': link})
 
-        # start_urls = links
+    rules = [
+             Rule(LinkExtractor(allow=()), callback='parse_item', follow=True)
+    ]
 
-    def parse(self, response):
-        # for url in response.meta['start_urls']:
-        #     start_url = url
-        start_url = response.meta['start_urls']
-        link_list = response.css('ul li a ::text').extract()
-        paragraph = response.css('p::text').extract()
+    def parse_item(self, response):
+        print('Got response from %s .' % response.url)
+        start_url = response.request.url
+        # paragraph = response.css('p::text').extract()
         h3 = response.css('h3::text').extract()
         h2 = response.css('h2::text').extract()
-
-        # start_url = list(map(str.strip, start_url))
-        # link_list = list(map(str.strip, link_list))
-        # paragraph = list(map(str.strip, paragraph))
-        # h3 = list(map(str.strip, h3))
-        # h2 = list(map(str.strip, h2))
+        # print('Paragraph: % \n' % paragraph)
+        # print('h3: %s \n' % h3)
+        # print('h3: %s \n' % h2)
 
         yield {
             'url': start_url,
-            'link_list': link_list,
-            'paragraph': paragraph,
+            # 'paragraph': paragraph,
             'h3': h3,
             'h2': h2,
         }
